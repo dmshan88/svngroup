@@ -1,0 +1,7 @@
+*~
+*-local.php
+*.bak
+/runtime/*
+/vendor/*
+/www/assets/*
+!.gitignore
