@@ -5,5 +5,6 @@ return [
 	'projectbasename' => '',
 	'passwdfile' => '',
 	'accessfile' => '',
+	// 'svnworkcopy' => '',
 	'svnpath' => '',
 ];

@@ -10,6 +10,7 @@ use Yii;
  * @property string $id
  * @property string $name
  *
+ * @property Groupuser[] $groupusers
  * @property User[] $users
  */
 class Group extends \yii\db\ActiveRecord
@@ -28,11 +29,12 @@ class Group extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['id'], 'required'],
+            [['id', 'name'], 'required'],
             ['id', 'match', 'pattern' => '[\w]'],
             [['id'], 'string', 'max' => 10],
             [['id'], 'string', 'min' => 3],
             [['name'], 'string', 'max' => 45],
+            [['name'], 'unique'],
             [['id'], 'unique'],
         ];
     }
@@ -51,8 +53,16 @@ class Group extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
+    public function getGroupusers()
+    {
+        return $this->hasMany(Groupuser::className(), ['group_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
     public function getUsers()
     {
-        return $this->hasMany(User::className(), ['group_id' => 'id']);
+        return $this->hasMany(User::className(), ['id' => 'user_id'])->viaTable('groupuser', ['group_id' => 'id']);
     }
 }

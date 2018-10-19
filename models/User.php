@@ -9,11 +9,12 @@ use Yii;
  *
  * @property int $id
  * @property string $name
- * @property string $group_id
  * @property string $fullname
  * @property string $password
+ * @property string $department
  *
- * @property Group $group
+ * @property Groupuser[] $groupusers
+ * @property Group[] $groups
  */
 class User extends \yii\db\ActiveRecord
 {
@@ -31,14 +32,13 @@ class User extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'group_id', 'fullname', 'password'], 'required'],
-            [['name', 'group_id'], 'string', 'max' => 10],
-            [['name', 'group_id'], 'string', 'min' => 3],
-            ['name', 'match', 'pattern' => '[\w]'],
+            [['name', 'fullname', 'password', 'department'], 'required'],
+            [['name', 'department'], 'string', 'max' => 10],
             [['fullname', 'password'], 'string', 'max' => 45],
+            [['name'], 'string', 'min' => 3],
             [['name'], 'unique'],
+            ['name', 'match', 'pattern' => '[\w]'],
             [['fullname'], 'unique'],
-            [['group_id'], 'exist', 'skipOnError' => true, 'targetClass' => Group::className(), 'targetAttribute' => ['group_id' => 'id']],
         ];
     }
 
@@ -50,17 +50,25 @@ class User extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
-            'group_id' => 'Group ID',
             'fullname' => 'Fullname',
             'password' => 'Password',
+            'department' => 'Department',
         ];
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getGroup()
+    public function getGroupusers()
     {
-        return $this->hasOne(Group::className(), ['id' => 'group_id']);
+        return $this->hasMany(Groupuser::className(), ['user_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getGroups()
+    {
+        return $this->hasMany(Group::className(), ['id' => 'group_id'])->viaTable('groupuser', ['user_id' => 'id']);
     }
 }

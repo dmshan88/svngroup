@@ -10,7 +10,7 @@ use yii\helpers\ArrayHelper;
 
 $this->title = 'Create User';
 $this->params['breadcrumbs'][] = $this->title;
-$grouparr = Group::find()->select(['id','name'])->asArray()->all();
+
 ?>
 <div class="user-create">
 
@@ -25,11 +25,11 @@ $grouparr = Group::find()->select(['id','name'])->asArray()->all();
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
     <?= $form->field($model, 'password')->textInput(['maxlength' => true]) ?>
 
-    <?php echo $form->field($model, 'group_id')
-				    ->dropdownList(ArrayHelper::map($grouparr,'id', 'name'));
-    ?>
 
     <?= $form->field($model, 'fullname')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'department')->textInput(['maxlength' => true]) ?>
+
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>

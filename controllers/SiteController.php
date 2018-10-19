@@ -5,12 +5,13 @@ namespace app\controllers;
 use Yii;
 use app\models\User;
 use app\models\Group;
+use app\models\Groupuser;
 use app\models\Htpasswd;
 use app\models\Changepwd;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
+// use yii\filters\VerbFilter;
 
 /**
  * SiteController implements the CRUD actions for User model.
@@ -20,17 +21,17 @@ class SiteController extends Controller
     /**
      * {@inheritdoc}
      */
-    public function behaviors()
-    {
-        return [
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    'delete' => ['POST'],
-                ],
-            ],
-        ];
-    }
+    // public function behaviors()
+    // {
+    //     return [
+    //         'verbs' => [
+    //             'class' => VerbFilter::className(),
+    //             'actions' => [
+    //                 'delete' => ['POST'],
+    //             ],
+    //         ],
+    //     ];
+    // }
 
     /**
      * Lists all User models.
@@ -38,10 +39,35 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->redirect(['admin']);
+        return $this->redirect(['publicpage']);
         // return $this->redirect(['changepwd']);
     }
-        public function actionChangepwd()
+    public function actionPublicpage()
+    {
+        $userdataProvider = new ActiveDataProvider([
+            'query' => User::find(),
+            'sort' => [
+                'defaultOrder' => [
+                    'department' => SORT_ASC,
+                ]
+            ]
+        ]);
+        $groupdataProvider = new ActiveDataProvider([
+            'query' => Group::find(),
+            'sort' => [
+                'defaultOrder' => [
+                    'id' => SORT_ASC,
+                ]
+            ]
+        ]);
+        
+        return $this->render('publicpage',[
+            'groupdataProvider' => $groupdataProvider,
+            'userdataProvider' => $userdataProvider,
+        ]); 
+    }
+
+    public function actionChangepwd()
     {
         $model = new Changepwd();
         if ($model->load(Yii::$app->request->post())) {
@@ -62,65 +88,48 @@ class SiteController extends Controller
     public function actionAdmin()
     {
         $dataProvider = new ActiveDataProvider([
-            'query' => User::find(),
-        ]);
-
-        return $this->render('admin', [
-            'dataProvider' => $dataProvider,
+            'query' => Groupuser::find(),
             'sort' => [
                 'defaultOrder' => [
                     'group_id' => SORT_ASC,
                 ]
             ]
         ]);
+
+        return $this->render('admin', ['dataProvider' => $dataProvider ]);
     }
-    public function actionConfig()
+    public function actionUseradmin()
     {
-        $data=[];
-        foreach (User::find()->all() as $user) {
-           $data[$user->group_id][] = $user->name;
-           $data['all'][] = $user->name;
-        }
+        $dataProvider = new ActiveDataProvider([
+            'query' => User::find(),
+            'sort' => [
+                'defaultOrder' => [
+                    'department' => SORT_ASC,
+                ]
+            ]
+        ]);
 
-        $filecontent = "[groups]\n";
-        foreach ($data as $groupname => $members) {
-            $filecontent .= sprintf("%s = %s\n", $groupname, implode(',', $members));
-        }
-        $basename = Yii::$app->params['projectbasename'];
-        $filecontent .= sprintf("\n[%s:/]\n* = \n", $basename);
-        foreach ($data as $groupname => $members) {
-            if ($groupname == 'all')
-                continue;
-            //private
-            $filecontent .= sprintf("\n[%s:/%s] \n* = \n", $basename,$groupname);
-            $filecontent .= sprintf("@%s = rw\n@all = r\n", $groupname);
-            //public
-            $filecontent .= sprintf("\n[%s:/%s_public] \n* = \n", $basename,$groupname);
-            $filecontent .= sprintf("@%s = rw\n", $groupname);
-        }
-        if (!file_put_contents(Yii::$app->params['accessfile'], $filecontent) ) {
-            echo "config fail";
-            echo "<pre>" . $filecontent ."</pre>";
-        } else {
-            return $this->redirect(['admin']);
-
-        }
+        return $this->render('useradmin', [
+            'dataProvider' => $dataProvider,
+        ]);
     }
-
-
 
     public function actionCreateuser()
     {
 
         $model = new User();
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            $passwd = new Htpasswd(Yii::$app->params['passwdfile']);
-            $passwd->addUser($model->name, $model->password);
-            if ($passwd->doesUserExist($model->name)) {
-                return $this->redirect(['admin']);
-            } else {
-                echo "user add error";
+        if ($model->load(Yii::$app->request->post()) ) {
+            $clearpasswd = $model->password;
+            $model->password = base64_encode(sha1($clearpasswd, true)); 
+            if ($model->save()) {
+                $passwd = new Htpasswd(Yii::$app->params['passwdfile']);
+                $passwd->addUser($model->name, $model->password);
+                if ($passwd->doesUserExist($model->name)) {
+                    return $this->redirect(['index']);
+                } else {
+                    echo "user add error";
+                }
             }
         }
 
@@ -133,11 +142,6 @@ class SiteController extends Controller
     {
         $model = new Group();
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            $path = Yii::$app->params['projectpath'].$model->name;
-            if (!file_exists($path)) {
-                mkdir($path);
-                mkdir($path . "_public");
-            }
             return $this->redirect(['admin']);
         }
 
@@ -146,36 +150,80 @@ class SiteController extends Controller
         ]);
     }
 
-    public function actionUpdate($id)
+    public function actionCreategroupuser()
     {
-        $model = $this->findModel($id);
-
+        $model = new Groupuser();
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['admin']);
+            if (configauth())
+                return $this->redirect(['admin']);
+            else
+                return "config error";
         }
 
-        return $this->render('updateuser', [
+        return $this->render('creategroupuser', [
             'model' => $model,
         ]);
     }
 
+    public function actionDeleteauth($group_id,$user_id) 
+    {
+        $model = Groupuser::findOne(['group_id' => $group_id,'user_id' => $user_id,]);
+        if (is_null($model))
+            return "error";
+        $model->delete();
+         if (configauth())
+            return $this->redirect(['admin']);
+        else
+            return "config error";
+    }
+
     public function actionDelete($id)
     {
-        $model = $this->findModel($id);
+        $model = User::findOne($id);
+        if (is_null($model))
+            return "error";
         $passwd = new Htpasswd(Yii::$app->params['passwdfile']);
         $passwd->deleteUser($model->name);
+
+        Groupuser::deleteAll(["user_id" => $id]);
         $model->delete();
-
-        return $this->redirect(['admin']);
+        if (configauth())
+            return $this->redirect(['useradmin']);
+        else
+            return "config error";
     }
 
-    protected function findModel($id)
-    {
-        if (($model = User::findOne($id)) !== null) {
-            return $model;
+}
+function configauth()
+{
+    $data=[];
+    $all = [];
+    foreach (Groupuser::find()->all() as $groupuser) {
+        $username = $groupuser->user->name;
+
+        $data[$groupuser->group_id][] = $username;
+        $all[] = $username;
+    }
+    $data['all'] = array_unique($all);
+
+    $filecontent = "[groups]\n";
+    foreach ($data as $groupname => $members) {
+        $filecontent .= sprintf("%s = %s\n", $groupname, implode(',', $members));
+    }
+    $basename = Yii::$app->params['projectbasename'];
+    $filecontent .= sprintf("\n[%s:/]\n* = \n@project = rw \n", $basename);
+    foreach ($data as $groupname => $members) {
+        if ($groupname == 'all'){
+            $filecontent .= sprintf("\n[%s:/%s] \n* = \n", $basename,'test');
+            $filecontent .= sprintf("@all = rw\n", $groupname);
+            continue;
         }
-
-        throw new NotFoundHttpException('The requested page does not exist.');
+        //private
+        $filecontent .= sprintf("\n[%s:/%s] \n* = \n", $basename,$groupname);
+        $filecontent .= sprintf("@%s = rw\n@all = r\n", $groupname);
+        //public
+        // $filecontent .= sprintf("\n[%s:/%s_public] \n* = \n", $basename,$groupname);
+        $filecontent .= sprintf("@%s = rw\n", $groupname);
     }
-
+    return file_put_contents(Yii::$app->params['accessfile'], $filecontent);
 }

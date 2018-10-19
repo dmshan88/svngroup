@@ -2,13 +2,18 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use app\models\Group;
+use app\models\User;
+use yii\helpers\ArrayHelper;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Group */
 
-$this->title = 'Create Group';
+$this->title = 'Create Group User';
 $this->params['breadcrumbs'][] = ['label' => 'Admin', 'url' => ['admin']];
 $this->params['breadcrumbs'][] = $this->title;
+$grouparr = Group::find()->select(['id','name'])->asArray()->all();
+$userarr = User::find()->select(['id','name'])->asArray()->all();
 ?>
 <div class="user-create">
 
@@ -16,12 +21,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
 	<?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'id')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'group_id')
+    	->dropdownList(ArrayHelper::map($grouparr,'id', 'name')); ?>
 
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'user_id')
+    	->dropdownList(ArrayHelper::map($userarr,'id', 'name')); ?>
 
 
-    <div class="form-group">
+    <div class="form-groupuser">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>
 
