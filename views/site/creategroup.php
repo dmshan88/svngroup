@@ -6,8 +6,8 @@ use yii\widgets\ActiveForm;
 /* @var $this yii\web\View */
 /* @var $model app\models\Group */
 
-$this->title = 'Create Group';
-$this->params['breadcrumbs'][] = ['label' => 'Admin', 'url' => ['admin']];
+$this->title = '新建分组';
+$this->params['breadcrumbs'][] = ['label' => '分组管理', 'url' => ['admin']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="user-create">
@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('保存', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

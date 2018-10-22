@@ -8,6 +8,7 @@ use app\models\Group;
 use app\models\Groupuser;
 use app\models\Htpasswd;
 use app\models\Changepwd;
+use app\models\LoginForm;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -18,21 +19,6 @@ use yii\web\NotFoundHttpException;
  */
 class SiteController extends Controller
 {
-    /**
-     * {@inheritdoc}
-     */
-    // public function behaviors()
-    // {
-    //     return [
-    //         'verbs' => [
-    //             'class' => VerbFilter::className(),
-    //             'actions' => [
-    //                 'delete' => ['POST'],
-    //             ],
-    //         ],
-    //     ];
-    // }
-
     /**
      * Lists all User models.
      * @return mixed
@@ -67,19 +53,49 @@ class SiteController extends Controller
         ]); 
     }
 
+    public function actionLogin()
+    {
+        if (!Yii::$app->user->isGuest) {
+            return $this->redirect(['admin']);
+        }
+
+        $model = new LoginForm();
+        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            return $this->redirect(['admin']);
+        } else {
+            $model->password = '';
+
+            return $this->render('login', [
+                'model' => $model,
+            ]);
+        }
+    }
+
     public function actionChangepwd()
     {
         $model = new Changepwd();
         if ($model->load(Yii::$app->request->post())) {
-            $passwd = new Htpasswd(Yii::$app->params['passwdfile']);
-            $ok = $passwd->changPasswd($model->name, $model->old_password, $model->new_password);
-            if ($ok) {
-                return $this->redirect(['index']);
-            } else {
-                echo "user change password error";
+            $usermodel = User::findOne(['name' => $model->name]);
+            if (empty($usermodel)){
+                return "model not find";
             }
-        }
+            if (base64_encode(sha1($model->old_password, true)) == $usermodel->password) {
+                $usermodel->password = base64_encode(sha1($model->new_password, true)); 
+                if ($usermodel->save()) {
+                    $passwd = new Htpasswd(Yii::$app->params['passwdfile']);
+                    $ok = $passwd->changPasswd($model->name, $model->old_password, $model->new_password);
+                    if ($ok)
+                        return $this->redirect(['index']);
+                    else 
+                        return "password write error";
+                } else {
+                    return "not save";
+                }
+            } else {
+                return "password not right";
+            }
 
+        }
         return $this->render('changepwd', [
             'model' => $model,
         ]);
@@ -87,6 +103,9 @@ class SiteController extends Controller
 
     public function actionAdmin()
     {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['login']);
+        }
         $dataProvider = new ActiveDataProvider([
             'query' => Groupuser::find(),
             'sort' => [
@@ -100,6 +119,9 @@ class SiteController extends Controller
     }
     public function actionUseradmin()
     {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['login']);
+        }
         $dataProvider = new ActiveDataProvider([
             'query' => User::find(),
             'sort' => [
@@ -124,8 +146,9 @@ class SiteController extends Controller
             $model->password = base64_encode(sha1($clearpasswd, true)); 
             if ($model->save()) {
                 $passwd = new Htpasswd(Yii::$app->params['passwdfile']);
-                $passwd->addUser($model->name, $model->password);
+                $passwd->addUser($model->name, $clearpasswd);
                 if ($passwd->doesUserExist($model->name)) {
+                    configauth();
                     return $this->redirect(['index']);
                 } else {
                     echo "user add error";
@@ -140,6 +163,9 @@ class SiteController extends Controller
 
     public function actionCreategroup()
     {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['login']);
+        }
         $model = new Group();
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['admin']);
@@ -152,6 +178,9 @@ class SiteController extends Controller
 
     public function actionCreategroupuser()
     {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['login']);
+        }
         $model = new Groupuser();
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             if (configauth())
@@ -167,6 +196,9 @@ class SiteController extends Controller
 
     public function actionDeleteauth($group_id,$user_id) 
     {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['login']);
+        }
         $model = Groupuser::findOne(['group_id' => $group_id,'user_id' => $user_id,]);
         if (is_null($model))
             return "error";
@@ -179,6 +211,9 @@ class SiteController extends Controller
 
     public function actionDelete($id)
     {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['login']);
+        }
         $model = User::findOne($id);
         if (is_null($model))
             return "error";
@@ -214,16 +249,15 @@ function configauth()
     $filecontent .= sprintf("\n[%s:/]\n* = \n@project = rw \n", $basename);
     foreach ($data as $groupname => $members) {
         if ($groupname == 'all'){
-            $filecontent .= sprintf("\n[%s:/%s] \n* = \n", $basename,'test');
-            $filecontent .= sprintf("@all = rw\n", $groupname);
+            $filecontent .= sprintf("\n[%s:/%s] \n* = rw\n", $basename,'test');
             continue;
         }
         //private
         $filecontent .= sprintf("\n[%s:/%s] \n* = \n", $basename,$groupname);
-        $filecontent .= sprintf("@%s = rw\n@all = r\n", $groupname);
+        $filecontent .= sprintf("@%s = rw\n", $groupname);
         //public
         // $filecontent .= sprintf("\n[%s:/%s_public] \n* = \n", $basename,$groupname);
-        $filecontent .= sprintf("@%s = rw\n", $groupname);
+        // $filecontent .= sprintf("@%s = rw\n@all = r\n", $groupname);
     }
     return file_put_contents(Yii::$app->params['accessfile'], $filecontent);
 }

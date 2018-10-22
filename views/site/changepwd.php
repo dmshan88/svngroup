@@ -8,7 +8,7 @@ use yii\widgets\ActiveForm;
 /* @var $this yii\web\View */
 /* @var $model app\models\User */
 
-$this->title = 'Change password';
+$this->title = '修改密码';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="user-create">
@@ -21,14 +21,17 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
-    <?= $form->field($model, 'old_password')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'name')->textInput(['maxlength' => true])
+    	->label("用户名")?>
+    <?= $form->field($model, 'old_password')->textInput(['maxlength' => true])
+    	->label("旧密码") ?>
 
 
-    <?= $form->field($model, 'new_password')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'new_password')->textInput(['maxlength' => true])
+    	->label("新密码") ?>
 
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('保存', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

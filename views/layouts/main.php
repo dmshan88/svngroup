@@ -41,7 +41,7 @@ AppAsset::register($this);
 <!-- </div> -->
 <footer class="footer">
     <div class="container">
-        <p class="pull-left">&copy; COMPANY <?= date('Y') ?></p>
+        <p class="pull-left">&copy; MNCHIP <?= date('Y') ?></p>
 
         <p class="pull-right">version 1.0</p>
     </div>

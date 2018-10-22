@@ -45,8 +45,8 @@ class Group extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
-            'name' => 'Name',
+            'id' => '分组ID',
+            'name' => '分组名',
         ];
     }
 

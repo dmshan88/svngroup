@@ -6,8 +6,8 @@ use \Yii;
 /* @var $this yii\web\View */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'User Admin';
-$this->params['breadcrumbs'][] = ['label' => 'Admin', 'url' => ['admin']];
+$this->title = '用户管理';
+$this->params['breadcrumbs'][] = ['label' => '分组管理', 'url' => ['admin']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="user-index">

@@ -9,8 +9,8 @@ use yii\helpers\ArrayHelper;
 /* @var $this yii\web\View */
 /* @var $model app\models\Group */
 
-$this->title = 'Create Group User';
-$this->params['breadcrumbs'][] = ['label' => 'Admin', 'url' => ['admin']];
+$this->title = '分配权限';
+$this->params['breadcrumbs'][] = ['label' => '分组管理', 'url' => ['admin']];
 $this->params['breadcrumbs'][] = $this->title;
 $grouparr = Group::find()->select(['id','name'])->asArray()->all();
 $userarr = User::find()->select(['id','name'])->asArray()->all();
@@ -22,14 +22,16 @@ $userarr = User::find()->select(['id','name'])->asArray()->all();
 	<?php $form = ActiveForm::begin(); ?>
 
     <?= $form->field($model, 'group_id')
-    	->dropdownList(ArrayHelper::map($grouparr,'id', 'name')); ?>
+    	->dropdownList(ArrayHelper::map($grouparr,'id', 'name'))
+        ->label("分组"); ?>
 
     <?= $form->field($model, 'user_id')
-    	->dropdownList(ArrayHelper::map($userarr,'id', 'name')); ?>
+    	->dropdownList(ArrayHelper::map($userarr,'id', 'name'))
+        ->label("用户"); ?>
 
 
     <div class="form-groupuser">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('保存', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

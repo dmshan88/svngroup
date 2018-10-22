@@ -24,13 +24,16 @@ $config = [
             ]
         ],
         'db' => $db['mysql'],
+        'user' => [
+            'identityClass' => 'app\models\User',
+        ],
      ], 
     // 'defaultRoute' => 'fapan', 
     // 'defaultController' => 'index' 
     'language' => 'zh-CN',
-    'language' => 'en-US',
+    // 'language' => 'en-US',
     'timeZone' => 'Asia/Shanghai',
-    'sourceLanguage' => 'en-US',
+    'sourceLanguage' => 'zh-CN',
     'params' => $params,
 ];
 
