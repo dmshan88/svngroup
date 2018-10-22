@@ -13,7 +13,7 @@ $this->title = '分配权限';
 $this->params['breadcrumbs'][] = ['label' => '分组管理', 'url' => ['admin']];
 $this->params['breadcrumbs'][] = $this->title;
 $grouparr = Group::find()->select(['id','name'])->asArray()->all();
-$userarr = User::find()->select(['id','name'])->asArray()->all();
+$userarr = User::find()->select(['id','fullname'])->asArray()->all();
 ?>
 <div class="user-create">
 
@@ -26,7 +26,7 @@ $userarr = User::find()->select(['id','name'])->asArray()->all();
         ->label("分组"); ?>
 
     <?= $form->field($model, 'user_id')
-    	->dropdownList(ArrayHelper::map($userarr,'id', 'name'))
+    	->dropdownList(ArrayHelper::map($userarr,'id', 'fullname'))
         ->label("用户"); ?>
 
 

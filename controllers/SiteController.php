@@ -255,6 +255,7 @@ function configauth()
         //private
         $filecontent .= sprintf("\n[%s:/%s] \n* = \n", $basename,$groupname);
         $filecontent .= sprintf("@%s = rw\n", $groupname);
+        $filecontent .= sprintf("@%s = rw\n", "project");
         //public
         // $filecontent .= sprintf("\n[%s:/%s_public] \n* = \n", $basename,$groupname);
         // $filecontent .= sprintf("@%s = rw\n@all = r\n", $groupname);
